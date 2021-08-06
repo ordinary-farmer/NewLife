@@ -9,7 +9,6 @@
 #include "Controller/Player/Component/HeroEquipmentComponent.h"
 #include "Controller/Player/Component/InventoryComponent.h"
 #include "Controller/Player/Component/MouseInfoComponent.h"
-#include "Controller/Player/Component/PlayerInfoComponent.h"
 #include "Item/DataAsset/AccessoryData.h"
 #include "Item/DataAsset/ArmorData.h"
 #include "Item/Object/Item.h"
