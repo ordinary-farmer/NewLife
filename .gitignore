@@ -1,0 +1,16 @@
+# Except Floders
+/.idea
+/.vs
+/Binaries
+/Config
+/Content
+/DerivedDataCache
+/Intermediate
+/Saved
+/Script
+/UML Diagram
+
+# Except Files
+*.sln
+*.uproject
+
