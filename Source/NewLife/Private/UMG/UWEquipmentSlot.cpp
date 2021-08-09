@@ -13,6 +13,9 @@
 #include "Item/DataAsset/ArmorData.h"
 #include "Item/Object/Item.h"
 #include "Item/DataAsset/ItemData.h"
+
+#include "Singleton/GameplayMessageHandlerSubsystem.h"
+
 #include "UMG/UWEquipmentInfo.h"
 #include "UMG/UWItemHoverInfo.h"
 #include "UMG/UWGameHUD.h"
@@ -114,6 +117,11 @@ FReply UUWEquipmentSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, co
 		}
 		else
 		{
+			UGameInstance* GameInstance = GetGameInstance();
+			UGameplayMessageHandlerSubsystem* GameplayMessageHandler = GameInstance->GetSubsystem<UGameplayMessageHandlerSubsystem>();
+
+			GameplayMessageHandler->DisplayMessage(FString("BagFull"));
+			
 			UE_LOG(LogTemp, Warning, TEXT("Can't UnEquip!"));
 		}
 	}
@@ -130,6 +138,11 @@ void UUWEquipmentSlot::OnSlotButtonClicked()
 
 	if (MouseInfo->GetIsCarryingItem() && !IsPossibleToInsert(MouseInfo->GetCarryingItem()))
 	{
+		UGameInstance* GameInstance = GetGameInstance();
+		UGameplayMessageHandlerSubsystem* GameplayMessageHandler = GameInstance->GetSubsystem<UGameplayMessageHandlerSubsystem>();
+
+		GameplayMessageHandler->DisplayMessage(FString("CanNotEquip"));
+		
 		UE_LOG(LogTemp, Warning, TEXT("Can't Insert This Item!!!"));
 		return;
 	}
