@@ -21,8 +21,11 @@ class NEWLIFE_API UPlayerRecoveryAbility : public UNLAbility
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	float RecoveryValue;
 
-	public:
+public:
 	UPlayerRecoveryAbility();
 
-	virtual void Execute() override;
+	virtual bool TryExecute(ANLPlayerController* PlayerController) override;
+
+protected:
+	virtual bool IsExecutable(ANLPlayerController* PlayerController) override;
 };

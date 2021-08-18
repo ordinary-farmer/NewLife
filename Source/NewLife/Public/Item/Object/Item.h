@@ -7,6 +7,8 @@
 #include "Item.generated.h"
 
 class UItemData;
+class UUWInventorySlot;
+class ANLPlayerController;
 
 /**
  * 
@@ -30,7 +32,7 @@ public:
 
 	virtual void InitializeItem(UItemData* NewData);
 
-	void Use();
+	bool Use(ANLPlayerController* PlayerController);
 	
 	int32 IncreaseAmountAndGetRemainder(int32 AmountToAdd);
 

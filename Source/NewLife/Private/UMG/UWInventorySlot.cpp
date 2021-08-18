@@ -99,11 +99,11 @@ FReply UUWInventorySlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, co
 
 		FGameplayTag ItemTag = ItemData->GetItemTag();
 
+		ANLPlayerController* PlayerController = Cast<ANLPlayerController>(GetOwningPlayer());
+		check(PlayerController);
+		
 		if (ItemTag.MatchesTag(ITEM_TAG_EQUIPMENT))
 		{
-			ANLPlayerController* PlayerController = Cast<ANLPlayerController>(GetOwningPlayer());
-			check(PlayerController);
-
 			UHeroEquipmentComponent* HeroEquipmentComp = PlayerController->GetHeroEquipmentComp();
 			check(HeroEquipmentComp);
 
@@ -195,7 +195,17 @@ FReply UUWInventorySlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, co
 		}
 		else
 		{
-			LinkedItem->Use();
+			bool bIsUsed = LinkedItem->Use(PlayerController);
+
+			if(bIsUsed)
+			{
+				ChangeAmountText(LinkedItem);
+			
+				if(LinkedItem->GetAmount() == 0)
+				{
+					Deactivate();
+				}
+			}			
 		}
 	}
 	return FReply::Handled();

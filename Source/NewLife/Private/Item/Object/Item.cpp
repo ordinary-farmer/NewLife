@@ -3,6 +3,7 @@
 
 #include "Item/Object/Item.h"
 #include "Ability/NLAbility.h"
+#include "Controller/Player/NLPlayerController.h"
 #include "Engine/AssetManager.h"
 #include "Item/DataAsset/ItemData.h"
 #include "Item/DataAsset/DurableEquipmentData.h"
@@ -34,16 +35,22 @@ void UItem::InitializeItem(UItemData* NewData)
 	}
 }
 
-void UItem::Use()
+bool UItem::Use(ANLPlayerController* PlayerController)
 {
 	check(ItemData);
+
+	bool Result = false;
 
 	UNLAbility* ItemAbility = ItemData->GetAbility();
 
 	if (ItemAbility)
 	{
-		ItemAbility->Execute();
+		Result = ItemAbility->TryExecute(PlayerController);
 	}
+
+	Amount--;
+
+	return Result;
 }
 
 int32 UItem::IncreaseAmountAndGetRemainder(int32 AmountToAdd)

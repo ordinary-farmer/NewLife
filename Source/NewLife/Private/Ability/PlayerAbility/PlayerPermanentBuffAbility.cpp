@@ -6,8 +6,3 @@
 UPlayerPermanentBuffAbility::UPlayerPermanentBuffAbility()
 {
 }
-
-void UPlayerPermanentBuffAbility::Execute()
-{
-	UE_LOG(LogTemp, Warning, TEXT("PlayerPermanentBuff Execute!"));
-}

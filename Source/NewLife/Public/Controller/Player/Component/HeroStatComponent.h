@@ -205,5 +205,7 @@ public:
 	FORCEINLINE float GetMaxExperiencePoint() const { return MaxExperiencePoint; }
 	FORCEINLINE int32 GetAvailableStatPoint() const { return AvailableStatPoint; }
 	FORCEINLINE float GetCurrentHealthPoint() const { return CurrentHealthPoint; }
+	FORCEINLINE float GetMaxHealthPoint() const { return MaxHealthPoint; }
 	FORCEINLINE float GetCurrentManaPoint() const { return CurrentManaPoint; }
+	FORCEINLINE float GetMaxManaPoint() const { return MaxManaPoint; }
 };

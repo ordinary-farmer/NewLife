@@ -9,6 +9,7 @@
 class USoundCue;
 class UAnimMontage;
 class UParticleSystem;
+class ANLPlayerController;
 
 /**
  * 
@@ -40,10 +41,12 @@ protected:
 public:
 	UNLAbility();
 
-	virtual void Execute();
+	virtual bool TryExecute(ANLPlayerController* PlayerController);
 
 protected:
 	void GenerateEffects();
+
+	virtual bool IsExecutable(ANLPlayerController* PlayerController);
 
 public:
 	FORCEINLINE FText GetAbilityName() const { return AbilityName; }

@@ -7,11 +7,18 @@ UNLAbility::UNLAbility()
 {
 }
 
-void UNLAbility::Execute()
+bool UNLAbility::TryExecute(ANLPlayerController* PlayerController)
 {
 	GenerateEffects();
+
+	return true;
 }
 
 void UNLAbility::GenerateEffects()
 {
+}
+
+bool UNLAbility::IsExecutable(ANLPlayerController* PlayerController)
+{
+	return true;
 }

@@ -7,11 +7,6 @@ UPlayerTemporaryBuffAbility::UPlayerTemporaryBuffAbility()
 {
 }
 
-void UPlayerTemporaryBuffAbility::Execute()
-{
-	UE_LOG(LogTemp, Warning, TEXT("PlayerTemporaryBuffAbility Execute!"));
-}
-
 void UPlayerTemporaryBuffAbility::OnBuffExpired()
 {
 }

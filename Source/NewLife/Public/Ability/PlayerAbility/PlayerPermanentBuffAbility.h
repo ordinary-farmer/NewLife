@@ -23,6 +23,4 @@ class NEWLIFE_API UPlayerPermanentBuffAbility : public UNLAbility
 
 public:
 	UPlayerPermanentBuffAbility();
-
-	virtual void Execute() override;
 };
