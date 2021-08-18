@@ -25,6 +25,21 @@ UItem* UMouseInfoComponent::ReleaseCarryingItem()
 	return Result;
 }
 
+void UMouseInfoComponent::FreeCarryingItem()
+{
+	if(CarryingItem == nullptr)
+	{
+		return;
+	}
+	
+	CarryingItem->ConditionalBeginDestroy();
+	
+	CarryingItem = nullptr;
+	CarryingItemIndex = NO_CARRYING_ITEM;
+
+	SwitchCursorToDefault();
+}
+
 void UMouseInfoComponent::ReceiveCarryingItem(int32 Index, UItem* Item)
 {
 	CarryingItemIndex = Index;

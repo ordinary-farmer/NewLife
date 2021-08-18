@@ -38,6 +38,8 @@ public:
 
 	UItem* ReleaseCarryingItem();
 
+	void FreeCarryingItem();
+
 	void ReceiveCarryingItem(int32 Index, UItem* Item);
 
 	void ReceiveCarryingItem(UItem* Item);
