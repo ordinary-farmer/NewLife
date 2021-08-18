@@ -7,6 +7,8 @@
 #include "Item/Object/Item.h"
 #include "Kismet/GameplayStatics.h"
 #include "Singleton/ItemManagerSubsystem.h"
+#include "Singleton/GameplayMessageHandlerSubsystem.h"
+#include "Controller/Player/Component/InventoryComponent.h"
 
 AItemContainer::AItemContainer()
 {
@@ -66,6 +68,7 @@ void AItemContainer::OnInteract_Implementation(APawn* PlayerPawn)
 			else
 			{
 				bIsInventoryFull = true;
+				break;
 			}
 		}
 	}
@@ -73,6 +76,9 @@ void AItemContainer::OnInteract_Implementation(APawn* PlayerPawn)
 	if(bIsInventoryFull)
 	{
 		// 인벤토리가 가득찼다는 경고를 띄워야 함!
+		UGameplayMessageHandlerSubsystem* GameplayMessageHandler = GameInstance->GetSubsystem<UGameplayMessageHandlerSubsystem>();
+
+		GameplayMessageHandler->DisplayMessage(FString("BagFull"));
 		Activate();
 	}
 }

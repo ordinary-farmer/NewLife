@@ -10,6 +10,18 @@
 UHeroAnimInstance::UHeroAnimInstance()
 {
 	FootIKManager = MakeUnique<FHumanFootIKHelper>();
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> UnArmMontageAsset(TEXT("AnimMontage'/Game/Paladin/Animation/Montages/AM_Unarm.AM_Unarm'"));
+	if(UnArmMontageAsset.Succeeded())
+	{
+		UnArmMontage = UnArmMontageAsset.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipMontageAsset(TEXT("AnimMontage'/Game/Paladin/Animation/Montages/AM_Equip.AM_Equip'"));
+	if(EquipMontageAsset.Succeeded())
+	{
+		EquipMontage = EquipMontageAsset.Object;
+	}
 }
 
 void UHeroAnimInstance::NativeInitializeAnimation()
@@ -43,7 +55,12 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bIsInAir = Owner->GetLocomotionInfo().bIsInAir;
 	bPressedJump = Owner->GetLocomotionInfo().bPressedJump;
 	bPressedSprint = Owner->GetLocomotionInfo().bPressedSprint;
-	
+	bIsCarryingWeapon = Owner->GetLocomotionInfo().bIsCarryingWeapon;
+
+	if(bIsCarryingWeapon)
+	{
+		Direction = CalculateDirection(Owner->GetVelocity(), Owner->GetActorRotation());
+	}
 	// Place Foot By Using FFootIKHelper	
 	if (!bIsInAir && !bIsMoving)
 	{
@@ -54,6 +71,16 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		const FHumanFootIKInfo EmptyFootIKInfo;
 		FootIKInfo = EmptyFootIKInfo;
 	}
+}
+
+void UHeroAnimInstance::PlayUnArmMontage()
+{
+	Montage_Play(UnArmMontage);
+}
+
+void UHeroAnimInstance::PlayEquipMontage()
+{
+	Montage_Play(EquipMontage);
 }
 
 void UHeroAnimInstance::ChooseMoveEndAnimation()

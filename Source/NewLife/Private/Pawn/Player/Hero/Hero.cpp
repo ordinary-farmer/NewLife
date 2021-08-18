@@ -8,6 +8,8 @@
 #include "Components/SphereComponent.h"
 #include "Pawn/Player/Components/InteractHelperWidgetComponent.h"
 #include "Pawn/Player/Components/InteractComponent.h"
+#include "Pawn/Player/Components/WeaponMeshComponent.h"
+#include "Pawn/Player/Hero/HeroAnimInstance.h"
 
 // Sets default values
 AHero::AHero()
@@ -25,10 +27,10 @@ AHero::AHero()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	RightHandWeaponMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightHandWeaponMeshComp"));
+	RightHandWeaponMeshComp = CreateDefaultSubobject<UWeaponMeshComponent>(TEXT("RightHandWeaponMeshComp"));
 	RightHandWeaponMeshComp->SetupAttachment(GetMesh());
 	
-	LeftHandWeaponMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftHandWeaponMeshComp"));
+	LeftHandWeaponMeshComp = CreateDefaultSubobject<UWeaponMeshComponent>(TEXT("LeftHandWeaponMeshComp"));
 	LeftHandWeaponMeshComp->SetupAttachment(GetMesh());
 
 	HeadMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMeshComp"));
@@ -87,6 +89,7 @@ void AHero::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("ToggleGait", IE_Pressed, this, &AHero::ToggleWalkOrRun);
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, InteractComp, &UInteractComponent::Interact);
+	PlayerInputComponent->BindAction("ToggleWeaponCarryMode", IE_Pressed, this, &AHero::ToggleWeaponCarryMode);
 }
 
 void AHero::PostInitializeComponents()
@@ -99,10 +102,12 @@ void AHero::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, false);
 	
-	RightHandWeaponMeshComp->AttachToComponent(GetMesh(), TransformRules, FName("RightHandUnEquip"));
-	LeftHandWeaponMeshComp->AttachToComponent(GetMesh(), TransformRules, FName("LeftHandUnEquip"));
+	
+	// FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, false);
+	//
+	// RightHandWeaponMeshComp->AttachToComponent(GetMesh(), TransformRules, FName("RightHand2"));
+	// LeftHandWeaponMeshComp->AttachToComponent(GetMesh(), TransformRules, FName("LeftHand2"));
 }
 
 void AHero::OnConstruction(const FTransform& Transform)
@@ -125,6 +130,9 @@ void AHero::OnConstruction(const FTransform& Transform)
 	ShoulderMeshComp->SetMasterPoseComponent(GetMesh());
 	ArmMeshComp->SetMasterPoseComponent(GetMesh());
 	TorsoMeshComp->SetMasterPoseComponent(GetMesh());
+
+	RightHandWeaponMeshComp->InitWeaponMesh(GetMesh(), EHeroHandType::RightHand);
+	LeftHandWeaponMeshComp->InitWeaponMesh(GetMesh(), EHeroHandType::LeftHand);
 }
 
 USkeletalMesh* AHero::MergeSkeletalMeshes(const FSkeletalMeshMergeParams& MeshMergeParams)
@@ -181,12 +189,25 @@ void AHero::TurnAndMove(float DeltaTime)
 	// Turn My Self
 	if (LocomotionInfo.bIsMoving && LocomotionInfo.bMoveInput)
 	{
-		FRotator TurnTo(FMath::RInterpTo(GetActorRotation(), DirectionToMove.Rotation(), DeltaTime,
-		                                 HERO_TURN_RATE));
+		FRotator TurnTo;
+		
+		if(LocomotionInfo.bIsCarryingWeapon)
+		{
+			const FVector CameraForwardVector(FRotationMatrix(CameraWorldRotation).GetScaledAxis(EAxis::X));
+
+			TurnTo = FRotator(FMath::RInterpTo(GetActorRotation(), CameraForwardVector.Rotation(), DeltaTime,
+                                         HERO_TURN_RATE));
+		}
+		else
+		{
+			TurnTo = FRotator(FMath::RInterpTo(GetActorRotation(), DirectionToMove.Rotation(), DeltaTime,
+                                         HERO_TURN_RATE));
+		}
+
 		TurnTo.Pitch = 0.f;
 		SetActorRotation(TurnTo);
 	}
-
+	
 	// Move My Self
 	float MoveAmount;
 	if (XInput == 0 || YInput == 0)
@@ -196,6 +217,18 @@ void AHero::TurnAndMove(float DeltaTime)
 	else
 	{
 		MoveAmount = (FMath::Abs(XInput) + FMath::Abs(YInput)) / 2;
+	}
+
+	if(LocomotionInfo.bIsCarryingWeapon)
+	{
+		if(FVector::DotProduct(GetActorForwardVector(), DirectionToMove) < -0.01f)
+		{
+			MoveAmount *= .75f;
+		}
+		else
+		{
+			MoveAmount *= .9f;
+		}
 	}
 
 	AddMovementInput(DirectionToMove, MoveAmount);
@@ -220,6 +253,11 @@ void AHero::InterpolateMaxSpeed()
 
 void AHero::ToggleGait(EHeroGait NewGait)
 {
+	if(LocomotionInfo.Gait == NewGait)
+	{
+		return;
+	}
+	
 	if (LocomotionInfo.Gait != EHeroGait::Sprinting && NewGait == EHeroGait::Sprinting)
 	{
 		CameraBoom->SetCamMoveMode(ECamMoveMode::Sprint);
@@ -339,7 +377,7 @@ void AHero::SetArmMesh(USkeletalMesh* LoadedMesh)
 
 void AHero::UpdateXInput(float Value)
 {
-	if (bShouldBlockMoveInput)
+	if (bShouldBlockMoveInput || bShouldBlockAllInput)
 	{
 		XInput = 0.f;
 	}
@@ -351,7 +389,7 @@ void AHero::UpdateXInput(float Value)
 
 void AHero::UpdateYInput(float Value)
 {
-	if (bShouldBlockMoveInput)
+	if (bShouldBlockMoveInput || bShouldBlockAllInput)
 	{
 		YInput = 0.f;
 	}
@@ -383,7 +421,7 @@ void AHero::StopJump()
 
 void AHero::StartSprint()
 {
-	if (LocomotionInfo.Gait == EHeroGait::Walking || GetCharacterMovement()->IsFalling())
+	if (LocomotionInfo.Gait == EHeroGait::Walking || GetCharacterMovement()->IsFalling() || bShouldBlockAllInput)
 	{
 		return;
 	}
@@ -395,7 +433,7 @@ void AHero::StartSprint()
 
 void AHero::StopSprint()
 {
-	if (LocomotionInfo.Gait == EHeroGait::Walking || GetCharacterMovement()->IsFalling())
+	if (LocomotionInfo.Gait == EHeroGait::Walking || GetCharacterMovement()->IsFalling() || bShouldBlockAllInput)
 	{
 		return;
 	}
@@ -407,7 +445,7 @@ void AHero::StopSprint()
 
 void AHero::ToggleWalkOrRun()
 {
-	if (GetCharacterMovement()->IsFalling())
+	if (GetCharacterMovement()->IsFalling() || bShouldBlockAllInput || LocomotionInfo.bIsCarryingWeapon)
 	{
 		return;
 	}
@@ -419,5 +457,28 @@ void AHero::ToggleWalkOrRun()
 	else
 	{
 		ToggleGait(EHeroGait::Walking);
+	}
+}
+
+void AHero::ToggleWeaponCarryMode()
+{
+	if(LocomotionInfo.bIsInAir == true || LocomotionInfo.Speed > 0.f)
+	{
+		return;
+	}
+	
+	UHeroAnimInstance* AnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
+	check(AnimInstance);
+
+	if(LocomotionInfo.bIsCarryingWeapon)
+	{
+		AnimInstance->PlayUnArmMontage();
+		LocomotionInfo.bIsCarryingWeapon = false;
+	}
+	else
+	{
+		AnimInstance->PlayEquipMontage();
+		LocomotionInfo.bIsCarryingWeapon = true;
+		ToggleGait(EHeroGait::Running);
 	}
 }

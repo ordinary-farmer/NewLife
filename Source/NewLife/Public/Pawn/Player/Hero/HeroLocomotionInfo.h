@@ -27,7 +27,8 @@ struct FHeroLocomotionInfo
         , bIsInAir(false)
         , bMoveInput(false)
         , bPressedJump(false)
-        , bPressedSprint(false) {}
+        , bPressedSprint(false)
+		, bIsCarryingWeapon(false) {}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EHeroGait Gait;
@@ -55,4 +56,7 @@ struct FHeroLocomotionInfo
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bPressedSprint;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsCarryingWeapon;
 };

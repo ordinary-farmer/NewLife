@@ -12,6 +12,6 @@ void UCAnimNotify_HeroUnblockAllInput::Notify(USkeletalMeshComponent* MeshComp, 
 
 	if(PlayerCharacter)
 	{
-		PlayerCharacter->SetShouldBlockAllInput(true);
+		PlayerCharacter->SetShouldBlockAllInput(false);
 	}
 }

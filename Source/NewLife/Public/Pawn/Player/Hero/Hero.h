@@ -18,6 +18,7 @@ class UHeroStatsComponent;
 class UWidgetComponent;
 class UInteractComponent;
 class UInteractHelperWidgetComponent;
+class UWeaponMeshComponent;
 
 UCLASS()
 class NEWLIFE_API AHero : public ACharacter
@@ -26,10 +27,10 @@ class NEWLIFE_API AHero : public ACharacter
 
 	// ******************** Variables... ************************
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Hero | Components", meta=(AllowPrivateAccess="true"))
-	UStaticMeshComponent* RightHandWeaponMeshComp;
+	UWeaponMeshComponent* RightHandWeaponMeshComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Hero | Components", meta=(AllowPrivateAccess="true"))
-	UStaticMeshComponent* LeftHandWeaponMeshComp;
+	UWeaponMeshComponent* LeftHandWeaponMeshComp;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Hero | Components", meta=(AllowPrivateAccess="true"))
 	USkeletalMeshComponent* HeadMeshComp;
@@ -144,15 +145,16 @@ public:
 	FHeroLocomotionInfo GetLocomotionInfo() const { return LocomotionInfo; }
 
 	FORCEINLINE void SetShouldBlockMoveInput(bool NewState) { bShouldBlockMoveInput = NewState; }
+	FORCEINLINE void SetShouldBlockAllInput(bool NewState) { bShouldBlockAllInput = NewState; }
 
 	FORCEINLINE float GetMaxWalkingSpeed() const { return MaxWalkingSpeed; }
 	FORCEINLINE float GetMaxRunningSpeed() const { return MaxRunningSpeed; }
 	FORCEINLINE float GetMaxSprintingSpeed() const { return MaxSprintingSpeed; }
 	
-	FORCEINLINE UStaticMeshComponent* GetRightHandWeaponMeshComponent() const { return RightHandWeaponMeshComp; }
+	FORCEINLINE UWeaponMeshComponent* GetRightHandWeaponMeshComponent() const { return RightHandWeaponMeshComp; }
 	void SetRightHandWeaponMesh(UStaticMesh* LoadedMesh);
 	
-	FORCEINLINE UStaticMeshComponent* GetLeftHandWeaponMeshComponent() const { return LeftHandWeaponMeshComp; }
+	FORCEINLINE UWeaponMeshComponent* GetLeftHandWeaponMeshComponent() const { return LeftHandWeaponMeshComp; }
 	void SetLeftHandWeaponMesh(UStaticMesh* LoadedMesh);
 	
 	FORCEINLINE USkeletalMeshComponent* GetHeadMeshComponent() const { return HeadMeshComp; }
@@ -188,6 +190,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Hero | Input", meta=(AllowPrivateAccess="true"))
 	bool bShouldBlockMoveInput;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Hero | Input", meta=(AllowPrivateAccess="true"))
+	bool bShouldBlockAllInput;
+
 	void UpdateXInput(float Value);
 
 	void UpdateYInput(float Value);
@@ -205,4 +210,6 @@ private:
 	void StopSprint();
 
 	void ToggleWalkOrRun();
+
+	void ToggleWeaponCarryMode();
 };

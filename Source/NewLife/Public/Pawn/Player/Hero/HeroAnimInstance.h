@@ -49,11 +49,23 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Locomotion", meta=(AllowPrivateAccess="true"))
 	float RunEndPlayRate;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Locomotion", meta=(AllowPrivateAccess="true"))
+	bool bIsCarryingWeapon;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Locomotion", meta=(AllowPrivateAccess="true"))
+	float Direction;
 	
 	TUniquePtr<FHumanFootIKHelper> FootIKManager;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="FootIK", meta=(AllowPrivateAccess="true"))
-	FHumanFootIKInfo FootIKInfo;	
+	FHumanFootIKInfo FootIKInfo;
+
+	UPROPERTY()
+	UAnimMontage* UnArmMontage;
+
+	UPROPERTY()
+	UAnimMontage* EquipMontage;
 	
 public:
 	UHeroAnimInstance();
@@ -61,6 +73,10 @@ public:
 	virtual void NativeInitializeAnimation() override;
 
 	virtual void NativeUpdateAnimation(float DeltaTime) override;
+
+	void PlayUnArmMontage();
+
+	void PlayEquipMontage();
 
 private:
 	void ChooseMoveEndAnimation();
