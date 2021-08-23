@@ -51,5 +51,7 @@ public:
 	FORCEINLINE UHeroEquipmentComponent* GetHeroEquipmentComp() const { return HeroEquipmentComp; }
 	FORCEINLINE UInventoryComponent* GetInventoryComp() const { return InventoryComp; }
 	FORCEINLINE UMouseInfoComponent* GetMouseInfoComp() const { return MouseInfoComp; }
-	FORCEINLINE UUWGameHUD* GetGameHUD() const { return HUD; }
+
+	UFUNCTION(BlueprintCallable)
+	UUWGameHUD* GetGameHUD() const;
 };

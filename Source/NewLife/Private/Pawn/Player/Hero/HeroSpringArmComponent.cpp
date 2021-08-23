@@ -42,26 +42,6 @@ void UHeroSpringArmComponent::TickComponent(float DeltaTime, ELevelTick TickType
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FString CamMoveModeString;
-	
-	switch(CamMoveMode)
-	{
-		case ECamMoveMode::Normal:
-			CamMoveModeString = FString("Normal");
-			break;
-		case ECamMoveMode::Sprint:
-			CamMoveModeString = FString("Sprint");
-			break;
-		case ECamMoveMode::Combat:
-			CamMoveModeString = FString("Combat");
-			break;
-		case ECamMoveMode::WaitInput:
-			CamMoveModeString = FString("WaitInput");
-			break;
-		default:
-			break;
-	}
-
 	MoveCamera(DeltaTime);
 }
 

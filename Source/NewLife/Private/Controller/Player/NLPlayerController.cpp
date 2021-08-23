@@ -34,3 +34,8 @@ void ANLPlayerController::ToggleInventory()
 {
 	HUD->ToggleInventoryWidget();
 }
+
+UUWGameHUD* ANLPlayerController::GetGameHUD() const
+{
+	return HUD;
+}

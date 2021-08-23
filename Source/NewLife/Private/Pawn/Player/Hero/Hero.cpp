@@ -421,7 +421,7 @@ void AHero::StopJump()
 
 void AHero::StartSprint()
 {
-	if (LocomotionInfo.Gait == EHeroGait::Walking || GetCharacterMovement()->IsFalling() || bShouldBlockAllInput)
+	if (LocomotionInfo.Gait == EHeroGait::Walking || GetCharacterMovement()->IsFalling() || bShouldBlockAllInput || LocomotionInfo.bIsCarryingWeapon)
 	{
 		return;
 	}
@@ -474,11 +474,13 @@ void AHero::ToggleWeaponCarryMode()
 	{
 		AnimInstance->PlayUnArmMontage();
 		LocomotionInfo.bIsCarryingWeapon = false;
+		CameraBoom->SetCamMoveMode(ECamMoveMode::Normal);
 	}
 	else
 	{
 		AnimInstance->PlayEquipMontage();
 		LocomotionInfo.bIsCarryingWeapon = true;
+		CameraBoom->SetCamMoveMode(ECamMoveMode::Combat);
 		ToggleGait(EHeroGait::Running);
 	}
 }

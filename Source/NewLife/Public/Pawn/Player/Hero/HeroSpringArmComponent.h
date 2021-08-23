@@ -51,20 +51,20 @@ private:
 public:
 	UHeroSpringArmComponent();
 
-	virtual void InitializeComponent() override;
-
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
-
-	void MoveCamera(float DeltaTime);
-
 	void SetCamMoveMode(ECamMoveMode NewCamMoveMode);
 
 	FORCEINLINE ECamMoveMode GetCamMoveMode() const { return CamMoveMode; }
 
 protected:
+	virtual void InitializeComponent() override;
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+                               FActorComponentTickFunction* ThisTickFunction) override;
+
 	virtual void BeginPlay() override;
 
 private:
 	void StartCameraMove();
+
+	void MoveCamera(float DeltaTime);
 };
