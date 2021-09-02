@@ -2,9 +2,8 @@
 
 
 #include "Pawn/Player/Hero/HeroAnimInstance.h"
-
 #include "GameFramework/CharacterMovementComponent.h"
-
+#include "Pawn/Player/Components/WeaponMeshComponent.h"
 #include "Pawn/Player/Hero/Hero.h"
 
 UHeroAnimInstance::UHeroAnimInstance()
@@ -148,4 +147,38 @@ void UHeroAnimInstance::AnimNotify_LandIn()
 void UHeroAnimInstance::AnimNotify_LandOut()
 {
 	Owner->SetShouldBlockMoveInput(false);
+}
+
+void UHeroAnimInstance::AnimNotify_Equip()
+{
+	check(Owner);
+	
+	USkeletalMeshComponent* OwnerMeshComp = GetSkelMeshComponent();
+	check(OwnerMeshComp);
+	
+	UWeaponMeshComponent* RightHandMeshComp = Owner->GetRightHandWeaponMeshComponent();
+	check(RightHandMeshComp);
+
+	UWeaponMeshComponent* LeftHandMeshComp = Owner->GetLeftHandWeaponMeshComponent();
+	check(LeftHandMeshComp);
+
+	RightHandMeshComp->AttachToPalm();
+	LeftHandMeshComp->AttachToPalm();
+}
+
+void UHeroAnimInstance::AnimNotify_UnArm()
+{
+	check(Owner);
+	
+	USkeletalMeshComponent* OwnerMeshComp = GetSkelMeshComponent();
+	check(OwnerMeshComp);
+	
+	UWeaponMeshComponent* RightHandMeshComp = Owner->GetRightHandWeaponMeshComponent();
+	check(RightHandMeshComp);
+
+	UWeaponMeshComponent* LeftHandMeshComp = Owner->GetLeftHandWeaponMeshComponent();
+	check(LeftHandMeshComp);
+
+	RightHandMeshComp->AttachToBack();
+	LeftHandMeshComp->AttachToBack();
 }

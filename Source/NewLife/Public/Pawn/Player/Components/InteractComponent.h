@@ -75,12 +75,6 @@ public:
 	// Sets default values for this component's properties
 	UInteractComponent();
 
-	virtual void InitializeComponent() override;
-	
-	/** TopInteractive를 갱신 */
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
-
 	/** TopInteractive와 상호작용 */
 	UFUNCTION(BlueprintCallable)
 	void Interact();
@@ -99,7 +93,12 @@ public:
 
 	bool IsInteractableContains(AActor* Actor) const;
 
-protected:
+protected:	
+	virtual void InitializeComponent() override;
+	
+	/** TopInteractive를 갱신 */
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+                               FActorComponentTickFunction* ThisTickFunction) override;
 	// Called when the game starts
 	virtual void BeginPlay() override;
 

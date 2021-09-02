@@ -46,8 +46,6 @@ public:
 	// Sets default values for this actor's properties
 	ABaseInteractive();
 
-	virtual void OnConstruction(const FTransform& Transform) override;
-
 	virtual void OnInteract_Implementation(APawn* PlayerPawn) override;
 
 	UFUNCTION(BlueprintCallable, Category="IInteractable")
@@ -56,7 +54,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="IInteractable")
 	virtual void Deactivate() override;
 
-	virtual bool GetScreenLocation(FVector2D& OutLocation) override;
+	virtual bool TryGetScreenLocation(FVector2D& OutLocation) override;
 
 	virtual void ToggleInteractiveWidget(bool bIsTop) override;
 
@@ -68,6 +66,8 @@ public:
 	virtual bool GetIsActive() override;
 
 protected:
+	virtual void OnConstruction(const FTransform& Transform) override;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

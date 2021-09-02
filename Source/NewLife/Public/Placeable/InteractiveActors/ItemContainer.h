@@ -22,6 +22,7 @@ class NEWLIFE_API AItemContainer : public ABaseInteractive
 public:
 	AItemContainer();
 
+protected:
 	/* 가지고 있는 아이템들을 인벤토리에 넣습니다. 아이템 데이터 애셋은 존재하나 아이템이 생성되지 않은 경우 동기 로드해서 아이템을 생성합니다. */
 	virtual void OnInteract_Implementation(APawn* PlayerPawn) override;
 

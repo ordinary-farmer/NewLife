@@ -9,5 +9,5 @@ enum class EItemChangeEvent : uint8
 {
 	Insert,
     Release,
-    Amount
+    AmountChange
 };

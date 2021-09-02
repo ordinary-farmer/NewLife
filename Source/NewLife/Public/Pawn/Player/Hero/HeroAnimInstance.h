@@ -98,4 +98,10 @@ private:
 
 	UFUNCTION()
     void AnimNotify_LandOut();
+
+	UFUNCTION()
+	void AnimNotify_Equip();
+
+	UFUNCTION()
+	void AnimNotify_UnArm();
 };

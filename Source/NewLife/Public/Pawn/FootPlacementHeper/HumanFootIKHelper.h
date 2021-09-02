@@ -15,14 +15,16 @@
 */
 class NEWLIFE_API FHumanFootIKHelper
 {
-	public:
+public:
 	FHumanFootIKHelper();
 	virtual ~FHumanFootIKHelper();
 
-	FHumanFootIKInfo UpdateFootIKInfo(UWorld* World, ACharacter* Character, FHumanFootIKInfo CurrentFootIKInfo, float Deltatime);
+	FHumanFootIKInfo UpdateFootIKInfo(UWorld* World, ACharacter* Character, FHumanFootIKInfo CurrentFootIKInfo,
+	                                  float Deltatime);
 
-	private:
-	FHumanFootIKInfo CalculateFootIKInterpolation(float DeltaTime, FHumanFootIKInfo CurrentFootIKInfo, FHumanFootIKInfo DesiredFootIKInfo);
+private:
+	FHumanFootIKInfo CalculateFootIKInterpolation(float DeltaTime, FHumanFootIKInfo CurrentFootIKInfo,
+	                                              FHumanFootIKInfo DesiredFootIKInfo);
 
 	static const float TraceDistanceFromFoot;
 };

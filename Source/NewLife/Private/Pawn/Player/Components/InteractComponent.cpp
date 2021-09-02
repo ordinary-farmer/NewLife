@@ -155,7 +155,7 @@ void UInteractComponent::UpdateTopInteractableActor()
 		}
 		
 		FVector2D ElemScreenLocation;
-		if (Elem.Value->GetScreenLocation(ElemScreenLocation))
+		if (Elem.Value->TryGetScreenLocation(ElemScreenLocation))
 		{
 			const float DistanceBetween = FVector2D::Distance(ScreenCenterCoord, ElemScreenLocation);
 			if (MinDistance > DistanceBetween)

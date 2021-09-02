@@ -55,7 +55,7 @@ void UUWInventoryBag::OnItemChanged(int32 SlotIndex, EItemChangeEvent ItemChange
 	case EItemChangeEvent::Release:
 		InventorySlotWidgets[SlotIndex]->Deactivate();
 		break;
-	case EItemChangeEvent::Amount:
+	case EItemChangeEvent::AmountChange:
 		{
 			UItem* Item = InventoryInterface->GetItem(SlotIndex);
 			InventorySlotWidgets[SlotIndex]->ChangeAmountText(Item);

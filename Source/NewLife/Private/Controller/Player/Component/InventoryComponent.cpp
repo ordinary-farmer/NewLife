@@ -66,7 +66,7 @@ void UInventoryComponent::PopulateTheSameItem(UItem* Item)
 			{
 				if(OnItemChangedDelegate.IsBound())
 				{
-					OnItemChangedDelegate.Broadcast(i, EItemChangeEvent::Amount);
+					OnItemChangedDelegate.Broadcast(i, EItemChangeEvent::AmountChange);
 				}
 			}
 

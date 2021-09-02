@@ -154,7 +154,7 @@ void ABaseInteractive::Deactivate()
 	ToggleInteractiveWidget(false);
 }
 
-bool ABaseInteractive::GetScreenLocation(FVector2D& OutLocation)
+bool ABaseInteractive::TryGetScreenLocation(FVector2D& OutLocation)
 {
 	APlayerController* Controller = UGameplayStatics::GetPlayerController(this, 0);
 

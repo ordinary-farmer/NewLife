@@ -29,7 +29,7 @@ public:
 
 	virtual void Deactivate() = 0;	
 	
-	virtual bool GetScreenLocation(FVector2D& OutLocation) = 0;
+	virtual bool TryGetScreenLocation(FVector2D& OutLocation) = 0;
 	
 	virtual void ToggleInteractiveWidget(bool bIsTop) = 0;
 
