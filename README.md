@@ -24,7 +24,12 @@ Unreal Engine 4.26 Portfolio
 
 ------
 
-## Character Setting(AHero)
+## 메인 캐릭터
+
+- 메인 캐릭터의 클래스명은 AHero입니다.
+  - AHero는 ACharacter를 상속합니다.
+- FHeroLocomotionInfo는 AHero의 로코모션 정보로서 매틱마다 갱신되어 애니메이션을 재생시키는 데 쓰입니다.
+- UHeroSpringArmComponent는 USpringArmComponent를 상속하고 AHero의 상태에 따라 카메라의 위치를 변경시킵니다.
 
 ![](https://i.imgur.com/cfg44XS.png)
 
@@ -39,17 +44,18 @@ Unreal Engine 4.26 Portfolio
   - ArmMeshComp : 캐릭터의 팔
   - TorsoMeshComp : 캐릭터의 가슴
   - MasterPoseComponent를 사용하여 Mesh를 부모로, 나머지를 Mesh의 자손으로 구성됩니다.
+- 아이템을 부위별로 착용하기 위해 모듈러로 만들었습니다.
 
 ![](https://i.imgur.com/ZZ0F6DG.png)
 
 - 문제는 사용해야할 Skeletal Mesh의 부분이 저렇게 딱 5개의 파트로 나눠지지 않았다는 점입니다.
-- 제가 사용한 애셋은 굉장히 작은 부분들로 나뉘어져 있었습니다.
+  - 저는 머리, 어깨, 팔, 몸통, 다리 5부분으로 이루어진 모듈러 캐릭터를 만들고 싶었지만 제가 구입한 애셋이 더 작은 부분으로 되어 있었습니다. (예 : AHero의 머리는 머리, 수염, 눈, 입을 합성시켜야 합니다.)
 
 ![](https://i.imgur.com/gDmrJl3.png)
 
 - 이 캐릭터의 머리부분을 만들기 위해 Eye, Head, Teeth, Beard를 합쳐야 하는데 이 부분은 스켈레탈 메시 병합을 이용해 해결했습니다.
 - 이렇게 한 이유는 렌더링 비용 때문인데, 각 부분을 모두 USkeletalMeshComponent를 만들어서 사용하면 그 숫자만큼 드로우콜이 비례하기 때문입니다.
-- 즉, 아주 작은 부분을 5개의 큰 부분으로 스켈레탈 메시병합을 하고 5개의 큰 부분은 MasterPoseComponent를 통해 메시들이 같은 애니메이션을 따르게 되는 것입니다.
+- 즉, 아주 작은 부분을 5개의 큰 부분(머리, 어깨, 팔, 몸통, 다리)으로 스켈레탈 메시병합을 하고 5개의 큰 부분은 MasterPoseComponent를 통해 메시들이 같은 애니메이션을 따르게 되는 것입니다.
 
 ```c++
 void AHero::OnConstruction(const FTransform& Transform)
@@ -103,8 +109,9 @@ USkeletalMesh* AHero::MergeSkeletalMeshes(const FSkeletalMeshMergeParams& MeshMe
 
 - 모듈식 캐릭터 작업
   - https://docs.unrealengine.com/4.27/ko/AnimatingObjects/SkeletalMeshAnimation/WorkingwithModularCharacters/
-- Unreal Locomotion Blendspace with Rootmotion
-  - https://www.youtube.com/watch?v=YtWbl50Jwwc&t=1260s&ab_channel=CodeLikeMe
+- [TUTORIAL\] C++ - Runtime Async Load Modular Character (Intermediate)
+  - https://forums.unrealengine.com/t/tutorial-c-runtime-async-load-modular-character-intermediate/4160
+
 - Advanced Locomotion System V4
   - https://www.unrealengine.com/marketplace/en-US/product/advanced-locomotion-system-v1?sessionInvalidated=true
 - Bringing a Hero from Paragon to Life with UE4
@@ -113,84 +120,11 @@ USkeletalMesh* AHero::MergeSkeletalMeshes(const FSkeletalMeshMergeParams& MeshMe
 
 ------
 
-### AnimInstance and Foot IK Placement
+### Foot IK Placement
 
-- 캐릭터는 매 프레임마다 Locomotion 정보를 업데이트하고 이 정보에 따라 캐릭터가 움직이게 됩니다.
+- AnimInstance는 매 프레임마다 AHero의 LocomotionInfo를 가져와서 애니메이션을 업데이트 합니다.
 
-```c++
-// Called every frame
-void AHero::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-    // 캐릭터의 속도, 가속여부, 추락여부, 방향키 입력 여부 등의 Locomotion Info를 업데이트합니다.
-	UpdateLocomotionInfo();
-
-    // 캐릭터를 실제로 움직이는 함수
-	TurnAndMove(DeltaTime);
-}
-
-void AHero::TurnAndMove(float DeltaTime)
-{
-	const FRotator CameraWorldRotation(0.f, GetControlRotation().Yaw, 0.f);
-	const FVector ForwardBasedXInput(FRotationMatrix(CameraWorldRotation).GetScaledAxis(EAxis::X) * XInput);
-	const FVector RightBasedYInput(FRotationMatrix(CameraWorldRotation).GetScaledAxis(EAxis::Y) * YInput);
-
-	FVector DirectionToMove(ForwardBasedXInput + RightBasedYInput);
-	DirectionToMove.Normalize();
-
-	// Turn My Self
-	if (LocomotionInfo.bIsMoving && LocomotionInfo.bMoveInput)
-	{
-		FRotator TurnTo;
-		
-        // 무기를 들고 있을때와 안들고 있을 때의 움직임의 방식이 다릅니다.
-		if(LocomotionInfo.bIsCarryingWeapon)
-		{
-			const FVector CameraForwardVector(FRotationMatrix(CameraWorldRotation).GetScaledAxis(EAxis::X));
-
-			TurnTo = FRotator(FMath::RInterpTo(GetActorRotation(), CameraForwardVector.Rotation(), DeltaTime,
-                                         HERO_TURN_RATE));
-		}
-		else
-		{
-			TurnTo = FRotator(FMath::RInterpTo(GetActorRotation(), DirectionToMove.Rotation(), DeltaTime,
-                                         HERO_TURN_RATE));
-		}
-
-		TurnTo.Pitch = 0.f;
-		SetActorRotation(TurnTo);
-	}
-	
-	// Move My Self
-	float MoveAmount;
-	if (XInput == 0 || YInput == 0)
-	{
-		MoveAmount = FMath::Abs(XInput) + FMath::Abs(YInput);
-	}
-	else
-	{
-		MoveAmount = (FMath::Abs(XInput) + FMath::Abs(YInput)) / 2;
-	}
-
-	if(LocomotionInfo.bIsCarryingWeapon)
-	{
-		if(FVector::DotProduct(GetActorForwardVector(), DirectionToMove) < -0.01f)
-		{
-			MoveAmount *= .75f;
-		}
-		else
-		{
-			MoveAmount *= .9f;
-		}
-	}
-
-	AddMovementInput(DirectionToMove, MoveAmount);
-}
-```
-
-- 그리고 AnimInstance는 매 프레임마다 LocomotionInfo를 가져와서 애니메이션을 업데이트 합니다.
-- AnimInstance는 private 멤버로 FootIKManager를 가지고 있는데 이 FootIKManager가 Foot Placement를 계산합니다.
+- AnimInstance는 private 멤버로 FootIKManager를 가지고 있는데 이 FootIKManager가 매 프레임에 놓일 발의 위치와 각도를  계산합니다.
 
 ```c++
 /* UHeroAnimInstance */
@@ -203,8 +137,6 @@ private:
     UPROPERTY()
 	AHero* Owner;
     
-    /* 유니크 포인터를 사용한 이유는 이때 당시 로직을 작성할 때 언리얼을 배운지 얼마 안되었고 */
-    /* 직접 수명을 관리하고 싶어서 그랬습니다. */
 	TUniquePtr<FHumanFootIKHelper> FootIKManager;
     
     // ...
@@ -281,7 +213,7 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 ## Interact
 
-### motivation
+### Motivation
 
 - 본 프로젝트의 상호작용은 어쌔신 크리드 오디세이에서 따왔습니다.(영상길이: 7초)
 
@@ -295,9 +227,15 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 ### Interactable Actor UMG Diagram
 
-![](https://i.imgur.com/dVTuQNW.png)
+- AHero는 UInteractComponent를 컴포넌트로 가지고 있으며, 이 컴포넌트가 상호작용을 담당하게됩니다.
+  - AHero가 인식할 수 있는 거리안에 들어오면 해당 IInteractable을 인식된 객체로서 기억합니다(RecognizedObjects).
+  - AHero가 상호작용할 수 있는 거리안에 들어오면 해당 IInteractable을 상호작용 할 수 있는 개체로서 기억합니다(InteractableObjects).
+  - InteractableObjects가 1개 이상이면 매 프레임마다 상호작용할 객체의 우선순위를 갱신합니다.
+    - 우선순위는 뷰포트의 객체의 위치를 뷰포트 위치로 투영시켜 뷰포트의 중앙에 가장 가까운 객체를 최우선 순위로 합니다.
+- IInteractable는 상호작용할 수 있는 객체 인터페이스입니다.
+- ABaseInteractive는 AActor와 IInteractable을 상속합니다.
 
-- AHero(본 프로젝트의 플레이어블 캐릭터)는 UInteractComponent를 들고 있고 이 컴포넌트가 IInteractable과의 상호작용을 담당합니다.
+![](https://i.imgur.com/dVTuQNW.png)
 
 ### UInteractComponent
 
@@ -374,39 +312,44 @@ void UInteractComponent::UpdateTopInteractableActor()
 ```c++
 /* ABaseInteractive.h */
 
-// 인식 범위
+// 인식 범위 : 이 인식가능한 범위 안에 AHero가 들어오면 객체는 AHero에게 인식이 됩니다.
+// 그리고 이 인식 범위가 Recognition Sphere의 반지름의 길이가 됩니다.
 #define RECOGNITION_RANGE (800.f)
 
-// ABaseInteractive 위에 띄워지는 원의 최대 높이
+// ABaseInteractive 위에 띄워지는 상호작용 도우미 UI의 최대 높이
 #define MAX_REACT_MARK_Z_LOCATION (270.f)
 
 // 기본 Interaction Sphere의 반지름
 #define DEFAULT_INTERACTION_SPHERE_RADIUS (32.f)
 
-// 상호작용 가능 범위
+// 상호작용 가능 범위 : Interaction Sphere + INTERACTABLE_RANGE
 #define INTERACTABLE_RANGE (100.f)
 ```
 
-- Recognition Sphere와 Interaction Sphere의 반지름만 정해두면 되는거 아니냐고 물어보실 수 있는데 그렇게 한 이유는 물체의 크기는 가변적이기 때문입니다.
--  만약 Interaction Sphere의 반지름을 1미터로 정해두었는데 물체의 반지름이 1미터를 넘으면 어떻게 될까요?
-- 이런 정의되지 않은 오류를 방지하기 위해 ABaseInteractive를 상속하는 클래스들은 Interaction Sphere의 반지름을 가변적으로 정하게 만들었습니다.
+- 만약 Interaction Sphere의 반지름을 1미터로 정해두었는데 물체의 반지름이 1미터를 넘으면 어떻게 될까요?
+  -  예를 들어 나무와 상호작용을 해야하는데 나무의 반지름이 1미터인에 상호작용 가능 범위가 1미터가 못되면 캐릭터는 나무를 인식을 하지만 상호작용 범위안에 들어가지 못하기 때문에 상호작용을 하지 못하게 됩니다.
+- 이런 오류를 방지하기 위해 ABaseInteractive를 상속하는 클래스들은 Interaction Sphere의 반지름을 가변적으로 정하게 만들었습니다.
 
 #### bAutoInteractionSphereRadius
+
+- 위의 오류를 방지하기 위해 만들어낸 boolean 변수입니다.
+- 객체의 메시의 크기에 따라 상호작용 가능 범위를 자동으로 잡아줍니다.
 
 - bAutoInteractionSphereRadius는 기본적으로 true이고, true면 OnConstruction()에서 Interaction Sphere의 반지름을 계산하여 정합니다.
 - 반지름 계산 방법
   - 고려해야 할 것은 두가지 입니다.
-    1. StaticMesh이든, SkeletalMesh이든 액터는 여러 Mesh들을 담고 있을 수 있다.
+    1. ABaseInteractable이 갖는 StaticMesh이든, SkeletalMesh이든 액터는 여러 Mesh들을 담고 있을 수 있다.
     2. 이 Mesh들은 반드시 액터 중앙에 위치한 것은 아니다.
   - 그렇기 때문에 Interaction Sphere의 반지름은 가장 먼 Mesh의 거리와 그 Mesh의 크기를 기준으로 상호작용 가능 범위를 더해서 정해집니다.
   - Recognition Sphere의 반지름은 인식 가능 범위로 정해집니다.
   - 예시 
-    - 가장 멀리 떨어져 있는 메시는 원이고 중앙에서 1미터 떨어져 있습니다. 이 원의 크기는 30cm입니다. 
-    - Interaction Sphere Radius = 100 + 30 + 100(상호작용 가능 범위)
+    - 가장 멀리 떨어져 있는 메시는 뿔이고 중앙에서 1미터 떨어져 있습니다. 이 뿔의 반지름의 크기는 30cm입니다. 
+    - Interaction Sphere Radius = 100(액터 중앙에서 떨어진 거리) + 30(뿔의 반지름) + 100(상호작용 가능 범위)
     - Recognition Radius = 800(인식가능 범위)
-    - Recognition Radius는 가변적이지 않은데 그 이유는 상호작용하는 물체가 너무 커지지 않길 원하기 때문입니다.
-    - 하지만 이것은 정의되지 않은 오류가 생길 수 있기 때문에 개선해야할 사항이라고 보고 고쳐야 한다고 생각합니다.
-  - 단, Z축의 거리는 고려하지 않고 X, Y에서의 거리만 고려합니다.
+    - Recognition Radius는 가변적이지 않습니다.
+      - 그 이유는 객체의 Interaction Radius가 7미터를 넘지 않을 것이다라고 가정하기 때문입니다.
+      - 이것은 정의되지 않은 오류가 생길 수 있기 때문에 개선해야할 사항이라고 보고 고쳐야 한다고 생각합니다.
+  - 계산할 때 메시와 앵터 중앙의 Z축 거리는 고려하지 않고 X, Y 거리만 고려합니다.
 
 ```c++
 /* ABaseInteractive.cpp */
@@ -486,7 +429,7 @@ void ABaseInteractive::OnConstruction(const FTransform& Transform)
 
 [![AC Odyssey Interact Example](https://i.imgur.com/sFhHFJE.png)](https://youtu.be/4hcO5hMWUkk)
 
-- 물론 경우에 따라 bAutoInteractionSphereRadius를 끌 수 있습니다.
+- 경우에 따라 bAutoInteractionSphereRadius를 끌 수 있습니다.
 - 본 포트폴리오 메인 영상에서 본 자동문은 bAutoInteractionSphereRadius가 꺼져있습니다. 켜면 InteractionSphere의 크기가 너무 커지기 때문입니다.
 
 #### UInteractAttributeComponent
@@ -507,8 +450,6 @@ void ABaseInteractive::OnInteract_Implementation(APawn* PlayerPawn)
 - BaseInteractive를 만들어 두었으니 상호작용 로직은 ABaseInteractive::OnInteract_Implementation(APawn*)을 override하여 정의합니다.
 - 굳이 cpp로 작성할 필요가 없고 빠른 로직 작성을 원한다면 블루프린트가 유용하게 사용될 수 있습니다.
 - 본 포트폴리오 영상 데모의 자동문과 꼬깔콘의 로직은 블루프린트로 작성되었습니다.
-
-#### 참고 페이지
 
 ------
 
@@ -531,6 +472,8 @@ void ABaseInteractive::OnInteract_Implementation(APawn* PlayerPawn)
 
 
 ### UMouseInfoComponent
+
+- ANLPlayerController를 구성하는 컴포넌트입니다.
 
 <img src="https://i.imgur.com/1zsOBYN.png" style="zoom:80%;" />
 
@@ -672,8 +615,6 @@ void UHeroStatComponent::AddOrSubStrength(int32 Value)
 
 
 
-### 참고 페이지
-
 ------
 
 ## Item
@@ -702,9 +643,9 @@ void UHeroStatComponent::AddOrSubStrength(int32 Value)
   - 첫번째 방법은 테이블에서 문자열 키로 검색해서 맞는 아이템데이터를 찾아야 하기 때문에 아이템 데이터를 가지고 있어야할 어떤 액터(AItemContainer)가 문자열 키를 들고 있어야 한다는 점이 문제가 되었습니다.
   - 왜 문제가 되냐, 이걸 사용하는 디자이너 입장에서 생각해봤을 때 드롭박스에서 검색해서 선택하는 것이 아닌 그냥 문자열을 입력하게될텐데 문자열을 틀리게 입력했을 때 어떻게 처리해야 하느냐가 문제였습니다.
   - 두번째 방법도 문제가 없는 것은 아니었습니다. 일단 하나하나 아이템을 생성해서 입력해야 할텐데 csv 테이블을 사용하는 것보다 사용 편의성과 효율성이 떨어진다는 느낌이었습니다.
-  - 저는 아이템 종류가 많지 않기 때문에 두번째를 선택했는데, 결국엔 첫번째와 두번째 방법을 섞는게 가장 좋은 방법인 것 같습니다.
-  - 그 방법은 일단 아이템 데이터를 테이블로 만들어둔 다음, 이 정보를 읽어서 엔진 런타임에서 데이터를 만들거나 수정하는 방법이 가장 나은 것 같습니다.
-  - 아무튼 두번째 방법을 선택했으니 저는 UAssetManager를 이용해서 비동기로드를 할 것입니다.
+  - 아이템 종류가 많지 않기 때문에 두번째를 선택했습니다.
+  - 개선방안은 아이템 데이터를 테이블로 만들어둔 다음, 이 정보를 읽어서 게임플레이가 아닌 엔진 런타임에서 데이터를 만들거나 수정하는 방법이 가장 나은 것 같습니다.
+  - 두번째 방법을 선택했으니 저는 UAssetManager를 이용해서 비동기로드를 할 것입니다.
 
 - 지금 당장 존재하는 아이템은 포션과 장비뿐이므로 UItemData를 상속하는건  UEquipmentData와 UPotionData 뿐입니다.
 - 그리고 UEquipmentData를 상속하는 여러 장비아이템 데이터가 있음을 확인하실 수 있습니다.
@@ -847,11 +788,29 @@ void AItemContainer::OnInteract_Implementation(APawn* PlayerPawn)
 
 ------
 
+## UI
+
+- UI의 기본 동작은 cpp에 정의해놓고 엔진에서 상속하여 엔진에서는 디자인만 하면 되게 구성했습니다.
+
+- UI가 바뀌어야 할 정보가 바뀌면 델리게이트가 브로드캐스팅해서 UI의 정보가 바뀝니다.
+
+  - 예를 들면 체력같은 스탯이 바뀌게 되면 UHeroStatComponent의 OnCurrentHealthPointChanged가 브로드캐스팅합니다.
+
+  - 브로드캐스팅하면 Bound되어 있는 함수를 실행합니다.
+
+    - ```c++
+      void UUWHealthBar::OnCurrentHealthPointChanged(float Value)
+      ```
+
+- 모든 UMG 클래스들은 NativeConstruct()에서 브로드캐스팅할 델리게이트에 함수들을 바운드 해줍니다.
+
+
+
 ## 본 프로젝트를 진행하면서 느낀점
 
 ### 1. 기획자의 필요성
 
-- 기획자가 없으니까 고민하는 시간이 너무 많아지고 삽질하는 횟수가 너무 많아져서 기획자가 정말 절실히 필요하다는 걸 느꼈습니다. 특히 본 프로젝트는 플레이는 어크 비슷하게 하고, 인벤토리, 아이템은 WOW를 따라하고 스탯 시스템은 디아블로를 따라했는데 UI를 끄고 키다보니 아 이거 큰일났구나 싶었습니다만... 일단 이 정도로 마무리 지었고 왜 게임개발에 기획자가 꼭 필요한지 절실히 느끼게 되었습니다.
+- 기획자가 없으니까 고민하는 시간이 너무 많아지고 삽질하는 횟수가 너무 많아져서 기획자가 정말 절실히 필요하다는 걸 느꼈습니다. 특히 본 프로젝트는 플레이는 어쌔신 크리드와 비슷하게 하고, 인벤토리, 아이템은 WOW를 따라하고 스탯 시스템은 디아블로를 따라했는데 UI를 끄고 키다보니 장르, 시스템이 다른 게임들을 막 섞다보니 아 이거 큰일났구나 싶었습니다. 일단 이 정도로 마무리 지었고 왜 게임개발에 기획자가 꼭 필요한지 절실히 느끼게 되었습니다.
 
 ### 2. 게임 개발의 경험
 
@@ -870,6 +829,7 @@ void AItemContainer::OnInteract_Implementation(APawn* PlayerPawn)
   - 테이블을 관리(테이블의 생성 및 삭제 등)을 할 때는 엔진을 통하는 것보다 C# 비주얼 프로그래밍을 이용한 써드파티 프로그램이 더 적격이라고 생각됩니다.
 - 또 다른 프로젝트이지만서도 같은 동작이 필요할 때 플러그인을 사용하는게 편리할 것 같은 느낌을 받았습니다.
   - 예시로는 Foot IK Placement를 예로 들 수 있을 것 같습니다.
+    - 이런 플러그인들이 있으면 개발속도가 빨라지기 때문입니다.
   - 그리고 보통 블루프린트 클래스나 오브젝트를 네이티브 코드에서 참조하려면 하드코딩해왔습니다. 아무래도 참고할 책에서는 직접 레퍼런스 복사하고 코드에 갖다 붙이고 이런 과정을 거쳤고 그걸 따라하다보니 그랬는데, 블루프린트 클래스나 오브젝트를 관리할 매니저 플러그인을 사용하면 어떨까, 결국엔 위치가 바뀔 수 있기 때문에 하드코딩은 너무 불편하다 이런 느낌을 받았습니다.
 
 ### 5. 변수 및 함수 이름은 코드 가독성에 매우 중요
@@ -881,5 +841,4 @@ void AItemContainer::OnInteract_Implementation(APawn* PlayerPawn)
 ## 마무리
 
 - 이 프로젝트는 계속해서 업데이트될 예정입니다.
-- 다음 시스템은 퀘스트 시스템입니다.
 - 지금까지 읽어주셔서 감사하고 오늘도 좋은 하루 보내셨으면 좋겠습니다.
