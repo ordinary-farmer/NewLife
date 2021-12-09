@@ -350,6 +350,7 @@ void UInteractComponent::UpdateTopInteractableActor()
       - 그 이유는 객체의 Interaction Radius가 7미터를 넘지 않을 것이다라고 가정하기 때문입니다.
       - 이것은 정의되지 않은 오류가 생길 수 있기 때문에 개선해야할 사항이라고 보고 고쳐야 한다고 생각합니다.
   - 계산할 때 메시와 앵터 중앙의 Z축 거리는 고려하지 않고 X, Y 거리만 고려합니다.
+  - Interaction Sphere Radius는 AActor::OnConstruction(const FTransform&)에서 이루어집니다.
 
 ```c++
 /* ABaseInteractive.cpp */
@@ -420,6 +421,9 @@ void ABaseInteractive::OnConstruction(const FTransform& Transform)
 	InteractionSphere->SetSphereRadius(InteractionSphereRadius + INTERACTABLE_RANGE);
 	RecognitionSphere->SetSphereRadius(RECOGNITION_RANGE);
 
+    // MarkWidget은 상호작용 개체위에 뜨는 상호작용 도우미 UI입니다.
+    // 인식을 하지 않았을 때는 나오지 않고 인식했을 때는 동그라미, 상호작용 가능한 경우에는 겹쳐진 동그라미 두개가
+    // 객체위에 그려집니다.
 	MarkWidgetZLocation = FMath::Clamp(MarkWidgetZLocation, 0.f, MAX_REACT_MARK_Z_LOCATION);
 	MarkWidget->SetRelativeLocation(FVector(0.f, 0.f, MarkWidgetZLocation));
 }
